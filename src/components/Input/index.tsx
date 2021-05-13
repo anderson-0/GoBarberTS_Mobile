@@ -2,6 +2,8 @@ import { useField } from "@unform/core";
 import React, {
   useEffect,
   useRef,
+  useState,
+  useCallback,
   useImperativeHandle,
   forwardRef,
 } from "react";
@@ -31,6 +33,25 @@ const Input: React.ForwardRefRenderFunction<InputRef, InputProps> = (
   const { registerField, defaultValue = "", fieldName, error } = useField(name);
   const inputValueRef = useRef<InputValueReference>({ value: defaultValue });
 
+  const [isFocused, setIsFocused] = useState(false);
+  const [isFilled, setIsFilled] = useState(false);
+
+  const handleInputFocus = useCallback(() => {
+    setIsFocused(true);
+  }, []);
+
+  const handleInputBlur = useCallback(() => {
+    setIsFocused(false);
+
+    // Short alternative
+    setIsFilled(!!inputValueRef.current.value);
+    // if (inputElementRef.current.value) {
+    //   setIsFilled(true);
+    // } else {
+    //   setIsFocused(false);
+    // }
+  }, []);
+
   useImperativeHandle(ref, () => {
     return {
       focus() {
@@ -56,10 +77,16 @@ const Input: React.ForwardRefRenderFunction<InputRef, InputProps> = (
   }, [fieldName, registerField]);
 
   return (
-    <Container>
-      <Icon name="mail" size={20} color="#666360" />
+    <Container isFocused={isFocused}>
+      <Icon
+        name="mail"
+        size={20}
+        color={isFocused || isFilled ? "#ff9000" : "#666360"}
+      />
       <TextInput
         ref={inputElementRef}
+        onFocus={handleInputFocus}
+        onBlur={handleInputBlur}
         // Ignorar este warning. Se remover o {...rest} ele some. É algum bug na lib de tipos
         placeholderTextColor="#666360"
         keyboardAppearance="dark"
