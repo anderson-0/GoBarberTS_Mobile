@@ -3,6 +3,7 @@ import { Feather as IconFeather } from "@expo/vector-icons";
 
 interface ContainerProps {
   isFocused: boolean;
+  isErrored: boolean;
 }
 
 export const Container = styled.View<ContainerProps>`

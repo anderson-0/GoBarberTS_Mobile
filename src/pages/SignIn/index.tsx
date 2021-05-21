@@ -5,7 +5,9 @@ import {
   Platform,
   TextInput,
   View,
+  Alert,
 } from "react-native";
+import * as Yup from "yup";
 import { Feather as IconFeather } from "@expo/vector-icons";
 
 import { ScrollView } from "react-native-gesture-handler";
@@ -24,6 +26,12 @@ import {
 import logoImg from "../../assets/logo.png";
 import Input from "../../components/Input";
 import Button from "../../components/Button";
+import getValidationErrors from "../../utils/getValidationErrors";
+
+interface SignInFormData {
+  email: string;
+  password: string;
+}
 
 const SignIn: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
@@ -31,7 +39,37 @@ const SignIn: React.FC = () => {
   const navigation = useNavigation();
 
   const handleSignIn = useCallback((data: object) => {
-    console.log(data);
+    async (data: SignInFormData) => {
+      try {
+        formRef.current?.setErrors({});
+        const schema = Yup.object().shape({
+          email: Yup.string()
+            .required("Email obrigatório")
+            .email("Digite um email válido"),
+          password: Yup.string().required("Senha obrigatória"),
+        });
+
+        await schema.validate(data, {
+          abortEarly: false,
+        });
+
+        // await signIn({
+        //   email: data.email,
+        //   password: data.password
+        // });
+      } catch (error) {
+        if (error instanceof Yup.ValidationError) {
+          const errors = getValidationErrors(error);
+          formRef.current?.setErrors(errors);
+          return;
+        }
+
+        Alert.alert(
+          "Erro na autenticação",
+          "Ocorreu um erro ao tentar fazer o login"
+        );
+      }
+    };
   }, []);
   return (
     <>
