@@ -6,6 +6,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import * as Yup from "yup";
 import { Feather as IconFeather } from "@expo/vector-icons";
 
 import {
@@ -26,6 +27,14 @@ import { Form } from "@unform/mobile";
 import { FormHandles } from "@unform/core";
 import { useCallback } from "react";
 
+import getValidationErrors from "../../utils/getValidationErrors";
+import { Alert } from "react-native";
+
+interface SignUpFormData {
+  name: string;
+  email: string;
+  password: string;
+}
 const SignUp: React.FC = () => {
   const formRef = useRef<FormHandles>(null);
 
@@ -33,8 +42,35 @@ const SignUp: React.FC = () => {
   const passwordInputRef = useRef<TextInput>(null);
   const navigation = useNavigation();
 
-  const handleSignUp = useCallback((data: object) => {
-    console.log(data);
+  const handleSignUp = useCallback(async (data: SignUpFormData) => {
+    try {
+      console.log(data);
+      formRef.current?.setErrors({});
+      const schema = Yup.object().shape({
+        email: Yup.string()
+          .required("Email obrigatório")
+          .email("Digite um email válido"),
+        password: Yup.string().min(6, "No minimo 6 digitos"),
+      });
+
+      await schema.validate(data, {
+        abortEarly: false,
+      });
+
+      // await api.post('./users',data)
+      // history.push('/');
+    } catch (error) {
+      if (error instanceof Yup.ValidationError) {
+        const errors = getValidationErrors(error);
+        formRef.current?.setErrors(errors);
+        return;
+      }
+
+      Alert.alert(
+        "Erro na autenticação",
+        "Ocorreu um erro ao tentar fazer o cadastro"
+      );
+    }
   }, []);
 
   return (
@@ -58,7 +94,7 @@ const SignUp: React.FC = () => {
                 name="name"
                 icon="user"
                 placeholder="Nome"
-                autoCapitalize="words"
+                // autoCapitalize="words"
                 returnKeyType="next"
                 onSubmitEditing={() => {
                   emailInputRef.current?.focus();
@@ -69,9 +105,10 @@ const SignUp: React.FC = () => {
                 name="email"
                 icon="email"
                 placeholder="E-mail"
-                keyboardType="email-address"
-                autoCorrect={false}
-                autoCapitalize="none"
+                //
+                // keyboardType="email-address"
+                // autoCorrect={false}
+                // autoCapitalize="none"
                 returnKeyType="next"
                 onSubmitEditing={() => {
                   passwordInputRef.current?.focus();
@@ -83,7 +120,7 @@ const SignUp: React.FC = () => {
                 icon="lock"
                 placeholder="Senha"
                 secureTextEntry
-                textContentType="newPassword"
+                // textContentType="newPassword"
                 returnKeyType="send"
                 onSubmitEditing={() => formRef.current?.submitForm()}
               />
